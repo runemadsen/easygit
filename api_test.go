@@ -1,4 +1,4 @@
-package git2gobindings
+package easygit
 
 import (
   "testing"
@@ -8,7 +8,10 @@ import (
 )
 
 func TestListBranches(t *testing.T) {
-  ListBranches()
+  branches := ListBranches("testrepo")
+  if branches[0] != "master" || branches[1] != "slave" {
+    t.Fail()
+  }
 }
 
 func TestMain(m *testing.M) {
