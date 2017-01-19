@@ -8,7 +8,9 @@ This is a set of helper functions for git2go to make the API more accessible.
 import "github.com/runemadsen/easygit"
 
 func main() {
-  branches := easygit.ListBranches("path/to/repo")
-  // Returns []string{ "master", "slave" }
+
+  branchNames := easygit.ListBranches("path/to/repo")
+  
+  err := easygit.DeleteBranch("path/to/repo", "mybranch")
 }
 ```
