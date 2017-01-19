@@ -8,8 +8,8 @@ import (
 )
 
 func TestListBranches(t *testing.T) {
-  branches := ListBranches("testrepo")
-  if branches[0] != "master" || branches[1] != "slave" {
+  branches, err := ListBranches("testrepo")
+  if branches[0] != "master" || branches[1] != "slave" || err != nil {
     t.Fail()
   }
 }

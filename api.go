@@ -5,13 +5,19 @@ import (
 	"strings"
 )
 
-func ListBranches(repoPath string) []string {
+func ListBranches(repoPath string) ([]string, error) {
 
-	repo, _ := git.OpenRepository(repoPath)
+	repo, repoErr := git.OpenRepository(repoPath)
+	if repoErr != nil {
+		return nil, repoErr
+	}
 
-	iter, _ := repo.NewReferenceIterator()
+	iter, iterErr := repo.NewReferenceIterator()
+	if iterErr != nil {
+		return nil, iterErr
+	}
+
 	nameIter := iter.Names()
-
 	var branches []string
 
 	name, err := nameIter.Next()
@@ -23,5 +29,5 @@ func ListBranches(repoPath string) []string {
 		name, err = nameIter.Next()
 	}
 
-	return branches
+	return branches, nil
 }
