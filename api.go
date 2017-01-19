@@ -27,3 +27,17 @@ func ListBranches(repoPath string) ([]string, error) {
 
 	return branches, nil
 }
+
+func DeleteBranch(repoPath string, branchName string) error {
+
+	repo, repoErr := git.OpenRepository(repoPath)
+	if repoErr != nil {
+		return repoErr
+	}
+
+	branch, branchErr := repo.LookupBranch(branchName, git.BranchLocal)
+	if branchErr != nil {
+		return branchErr
+	}
+	return branch.Delete()
+}
