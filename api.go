@@ -2,6 +2,7 @@ package easygit
 
 import (
 	"github.com/libgit2/git2go"
+	"strings"
 )
 
 func ListBranches(repoPath string) ([]string, error) {
@@ -26,6 +27,23 @@ func ListBranches(repoPath string) ([]string, error) {
 	}
 
 	return branches, nil
+}
+
+func CurrentBranch(repoPath string) (string, error) {
+
+	// If you want to discover which reference is the current branch, then you should
+	// Load the current HEAD reference (try the git_repository_head() convenience method)
+	repo, repoErr := git.OpenRepository(repoPath)
+	if repoErr != nil {
+		return "", repoErr
+	}
+
+	head, headErr := repo.Head()
+	if repoErr != nil {
+		return "", headErr
+	}
+
+	return strings.Split(head.Name(), "/")[2], nil
 }
 
 func DeleteBranch(repoPath string, branchName string) error {

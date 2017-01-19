@@ -10,7 +10,9 @@ import "github.com/runemadsen/easygit"
 func main() {
 
   branchNames := easygit.ListBranches("path/to/repo")
-  
+
+  currentBranch := easyGit.CurrentBranch("path/to/repo")
+
   err := easygit.DeleteBranch("path/to/repo", "mybranch")
 }
 ```

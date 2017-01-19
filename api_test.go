@@ -27,6 +27,15 @@ func TestDeleteBranch(t *testing.T) {
   }
 }
 
+func TestCurrentBranch(t *testing.T) {
+  branch, err := CurrentBranch("testrepo")
+  fmt.Println(branch)
+  if branch != "master" || err != nil  {
+    fmt.Println("CurrentBranch failed")
+    t.Fail()
+  }
+}
+
 func TestMain(m *testing.M) {
   os.RemoveAll("testrepo")
   os.Mkdir("testrepo", os.ModePerm)
