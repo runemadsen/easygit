@@ -2,7 +2,6 @@ package easygit
 
 import (
 	"github.com/libgit2/git2go"
-	"strings"
 )
 
 func ListBranches(repoPath string) ([]string, error) {
@@ -12,21 +11,18 @@ func ListBranches(repoPath string) ([]string, error) {
 		return nil, repoErr
 	}
 
-	iter, iterErr := repo.NewReferenceIterator()
+	iter, iterErr := repo.NewBranchIterator(git.BranchLocal)
 	if iterErr != nil {
 		return nil, iterErr
 	}
 
-	nameIter := iter.Names()
 	var branches []string
 
-	name, err := nameIter.Next()
+	branch, _, err := iter.Next()
 	for err == nil {
-		split := strings.Split(name, "/")
-		if(split[1] == "heads") {
-			branches = append(branches, split[2])
-		}
-		name, err = nameIter.Next()
+		name, _ := branch.Name()
+		branches = append(branches, name)
+		branch, _, err = iter.Next()
 	}
 
 	return branches, nil
