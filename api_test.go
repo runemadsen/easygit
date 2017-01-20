@@ -18,17 +18,45 @@ func TestListBranches(t *testing.T) {
 
 	branches, err := ListBranches(repo.Workdir())
 	checkFatal(t, err)
-	if branches[0] != "master" || err != nil {
+	if branches[0] != "master" {
 		fail(t)
 	}
 }
 
-// func TestDeleteBranch(t *testing.T) {
-// 	err := DeleteBranch("testrepo", "xxxdeleteme")
-// 	if err != nil {
-// 		fail(t)
-// 	}
-// }
+func TestCreateBranch(t *testing.T) {
+
+	repo := createTestRepo(t)
+	seedTestRepo(t, repo)
+	defer cleanupTestRepo(t, repo)
+
+	CreateBranch(repo.Workdir(), "master", "slave")
+
+	branches, err := ListBranches(repo.Workdir())
+	checkFatal(t, err)
+	if branches[0] != "master" || branches[1] != "slave" {
+		fail(t)
+	}
+
+}
+
+func TestDeleteBranch(t *testing.T) {
+
+	repo := createTestRepo(t)
+	seedTestRepo(t, repo)
+	defer cleanupTestRepo(t, repo)
+
+	CreateBranch(repo.Workdir(), "master", "slave")
+
+	err := DeleteBranch(repo.Workdir(), "slave")
+	checkFatal(t, err)
+
+	branches, err := ListBranches(repo.Workdir())
+	checkFatal(t, err)
+	if len(branches) != 1 {
+		fail(t)
+	}
+
+}
 
 func TestCurrentBranch(t *testing.T) {
 
@@ -43,8 +71,8 @@ func TestCurrentBranch(t *testing.T) {
 	}
 }
 
-// Test repo setup
-// --------------------------------------------------------
+// Test setup
+// ---------------------------------------------------
 
 func createTestRepo(t *testing.T) *git.Repository {
 	path, err := ioutil.TempDir("", "easygit")

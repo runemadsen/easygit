@@ -14,5 +14,7 @@ func main() {
   currentBranch := easyGit.CurrentBranch("path/to/repo")
 
   err := easygit.DeleteBranch("path/to/repo", "mybranch")
+
+  err := easygit.CreateBranch(repo.Workdir(), "master", "slave")
 }
 ```

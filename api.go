@@ -8,14 +8,14 @@ import (
 
 func ListBranches(repoPath string) ([]string, error) {
 
-	repo, repoErr := git.OpenRepository(repoPath)
-	if repoErr != nil {
-		return nil, repoErr
+	repo, err := git.OpenRepository(repoPath)
+	if err != nil {
+		return nil, err
 	}
 
-	iter, iterErr := repo.NewBranchIterator(git.BranchLocal)
-	if iterErr != nil {
-		return nil, iterErr
+	iter, err := repo.NewBranchIterator(git.BranchLocal)
+	if err != nil {
+		return nil, err
 	}
 
 	var branches []string
@@ -30,10 +30,37 @@ func ListBranches(repoPath string) ([]string, error) {
 	return branches, nil
 }
 
+func CreateBranch(repoPath string, from string, to string) error {
+
+	repo, err := git.OpenRepository(repoPath)
+	if err != nil {
+		return err
+	}
+
+	fromBranch, err := repo.LookupBranch(from, git.BranchLocal)
+	if err != nil {
+		return err
+	}
+
+	fromCommit, err := repo.LookupCommit(fromBranch.Target())
+	if err != nil {
+		return err
+	}
+
+	_, err = repo.CreateBranch(to, fromCommit, false)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// CheckoutBranch
+
+// PushBranch
+
 func CurrentBranch(repoPath string) (string, error) {
 
-	// If you want to discover which reference is the current branch, then you should
-	// Load the current HEAD reference (try the git_repository_head() convenience method)
 	repo, repoErr := git.OpenRepository(repoPath)
 	if repoErr != nil {
 		return "", repoErr
