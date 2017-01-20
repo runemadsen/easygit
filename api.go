@@ -1,8 +1,9 @@
 package easygit
 
 import (
-	"github.com/libgit2/git2go"
 	"strings"
+
+	"github.com/libgit2/git2go"
 )
 
 func ListBranches(repoPath string) ([]string, error) {
