@@ -39,6 +39,23 @@ func TestCreateBranch(t *testing.T) {
 
 }
 
+func TestCheckoutBranch(t *testing.T) {
+
+	repo := createTestRepo(t)
+	seedTestRepo(t, repo)
+	defer cleanupTestRepo(t, repo)
+
+	CreateBranch(repo.Workdir(), "master", "slave")
+	err := CheckoutBranch(repo.Workdir(), "slave")
+	checkFatal(t, err)
+	branch, err := CurrentBranch(repo.Workdir())
+	checkFatal(t, err)
+	if branch != "slave" {
+		fail(t)
+	}
+
+}
+
 func TestDeleteBranch(t *testing.T) {
 
 	repo := createTestRepo(t)

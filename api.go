@@ -30,6 +30,41 @@ func ListBranches(repoPath string) ([]string, error) {
 	return branches, nil
 }
 
+func CheckoutBranch(repoPath string, branchName string) error {
+
+	repo, err := git.OpenRepository(repoPath)
+	if err != nil {
+		return err
+	}
+
+	branch, err := repo.LookupBranch(branchName, git.BranchLocal)
+	if err != nil {
+		return err
+	}
+
+	commit, err := repo.LookupCommit(branch.Target())
+	if err != nil {
+		return err
+	}
+
+	tree, err := commit.Tree()
+	if err != nil {
+		return err
+	}
+
+	err = repo.CheckoutTree(tree, &git.CheckoutOpts{})
+	if err != nil {
+		return err
+	}
+
+	err = repo.SetHead("refs/heads/" + branchName)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func PushBranch(repoPath string, remoteName string, branch string, user string, pass string) error {
 
 	repo, err := git.OpenRepository(repoPath)
