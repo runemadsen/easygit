@@ -30,6 +30,30 @@ func ListBranches(repoPath string) ([]string, error) {
 	return branches, nil
 }
 
+func PushBranch(repoPath string, remoteName string, branch string, user string, pass string) error {
+
+	repo, err := git.OpenRepository(repoPath)
+	if err != nil {
+		return nil
+	}
+
+	remote, err := repo.Remotes.Lookup(remoteName)
+	if err != nil {
+		return nil
+	}
+
+	err = remote.Push([]string{"refs/heads/" + branch}, &git.PushOptions{
+		RemoteCallbacks: git.RemoteCallbacks{
+			CredentialsCallback: func(url string, username_from_url string, allowed_types git.CredType) (git.ErrorCode, *git.Cred) {
+				_, creds := git.NewCredUserpassPlaintext(user, pass)
+				return git.ErrOk, &creds
+			},
+		},
+	})
+
+	return err
+}
+
 func CreateBranch(repoPath string, from string, to string) error {
 
 	repo, err := git.OpenRepository(repoPath)

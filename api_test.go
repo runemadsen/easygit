@@ -58,6 +58,27 @@ func TestDeleteBranch(t *testing.T) {
 
 }
 
+func TestPushBranch(t *testing.T) {
+	t.Parallel()
+	remoteRepo := createBareTestRepo(t)
+	defer cleanupTestRepo(t, remoteRepo)
+	localRepo := createTestRepo(t)
+	defer cleanupTestRepo(t, localRepo)
+
+	_, err := localRepo.Remotes.Create("test_push", remoteRepo.Path())
+	checkFatal(t, err)
+
+	seedTestRepo(t, localRepo)
+
+	PushBranch(localRepo.Workdir(), "test_push", "master", "not", "used")
+
+	_, err = localRepo.References.Lookup("refs/remotes/test_push/master")
+	checkFatal(t, err)
+
+	_, err = remoteRepo.References.Lookup("refs/heads/master")
+	checkFatal(t, err)
+}
+
 func TestCurrentBranch(t *testing.T) {
 
 	repo := createTestRepo(t)
