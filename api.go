@@ -6,6 +6,34 @@ import (
 	"github.com/libgit2/git2go"
 )
 
+// Files
+// --------------------------------------------------------
+
+func AddAll(repoPath string) error {
+
+	repo, err := git.OpenRepository(repoPath)
+	if err != nil {
+		return err
+	}
+
+	idx, err := repo.Index()
+	if err != nil {
+		return err
+	}
+
+	err = idx.AddAll([]string{}, git.IndexAddDefault, nil)
+	if err != nil {
+		return err
+	}
+
+	err = idx.Write()
+
+	return err
+}
+
+// Branches
+// --------------------------------------------------------
+
 func ListBranches(repoPath string) ([]string, error) {
 
 	repo, err := git.OpenRepository(repoPath)
@@ -113,10 +141,6 @@ func CreateBranch(repoPath string, from string, to string) error {
 
 	return nil
 }
-
-// CheckoutBranch
-
-// PushBranch
 
 func CurrentBranch(repoPath string) (string, error) {
 

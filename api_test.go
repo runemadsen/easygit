@@ -10,6 +10,24 @@ import (
 	"github.com/libgit2/git2go"
 )
 
+func TestAddAll(t *testing.T) {
+
+	repo := createTestRepo(t)
+	defer cleanupTestRepo(t, repo)
+
+	AddAll(repo.Workdir())
+
+	index, err := repo.Index()
+	checkFatal(t, err)
+
+	entry, err := index.EntryByPath("README", 0)
+	checkFatal(t, err)
+
+	if entry == nil {
+		fail(t)
+	}
+}
+
 func TestListBranches(t *testing.T) {
 
 	repo := createTestRepo(t)
