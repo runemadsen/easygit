@@ -10,6 +10,83 @@ import (
 	"github.com/libgit2/git2go"
 )
 
+func TestCommit(t *testing.T) {
+
+	repo := createTestRepo(t)
+	defer cleanupTestRepo(t, repo)
+
+	err := AddAll(repo.Workdir())
+	checkFatal(t, err)
+
+	err = Commit(repo.Workdir(), "First commit", "First Last", "first@last.com")
+	checkFatal(t, err)
+
+	head, err := repo.Head()
+	checkFatal(t, err)
+
+	commit, err := repo.LookupCommit(head.Target())
+	checkFatal(t, err)
+
+	if commit.Message() != "First commit" {
+		fail(t)
+	}
+
+	tree, err := commit.Tree()
+	checkFatal(t, err)
+
+	file := tree.EntryByName("README")
+	if file == nil {
+		fail(t)
+	}
+
+}
+
+func TestCommitOtherBranch(t *testing.T) {
+
+	repo := createTestRepo(t)
+	seedTestRepo(t, repo)
+	defer cleanupTestRepo(t, repo)
+
+	CreateBranch(repo.Workdir(), "master", "slave")
+	err := CheckoutBranch(repo.Workdir(), "slave")
+	checkFatal(t, err)
+
+	err = ioutil.WriteFile(repo.Workdir()+"/SLAVEFILE", []byte("foo\n"), 0644)
+	checkFatal(t, err)
+
+	AddAll(repo.Workdir())
+	Commit(repo.Workdir(), "Slave commit", "First Last", "first@last.com")
+
+	head, err := repo.Head()
+	checkFatal(t, err)
+	commit, err := repo.LookupCommit(head.Target())
+	checkFatal(t, err)
+
+	if commit.Message() != "Slave commit" {
+		fail(t)
+	}
+
+	tree, err := commit.Tree()
+	checkFatal(t, err)
+
+	file := tree.EntryByName("SLAVEFILE")
+	if file == nil {
+		fail(t)
+	}
+
+	file = tree.EntryByName("README")
+	if file == nil {
+		fail(t)
+	}
+
+	branch, err := CurrentBranch(repo.Workdir())
+	checkFatal(t, err)
+	if branch != "slave" {
+		fail(t)
+	}
+
+}
+
 func TestAddAll(t *testing.T) {
 
 	repo := createTestRepo(t)

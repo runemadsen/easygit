@@ -2,11 +2,12 @@ package easygit
 
 import (
 	"strings"
+	"time"
 
 	"github.com/libgit2/git2go"
 )
 
-// Files
+// Add / Commit
 // --------------------------------------------------------
 
 func AddAll(repoPath string) error {
@@ -29,6 +30,54 @@ func AddAll(repoPath string) error {
 	err = idx.Write()
 
 	return err
+}
+
+func Commit(repoPath string, message string, name string, email string) error {
+
+	sig := &git.Signature{Name: name, Email: email, When: time.Now()}
+
+	repo, err := git.OpenRepository(repoPath)
+	if err != nil {
+		return err
+	}
+
+	idx, err := repo.Index()
+	if err != nil {
+		return err
+	}
+
+	treeID, err := idx.WriteTree()
+	if err != nil {
+		return err
+	}
+
+	tree, err := repo.LookupTree(treeID)
+	if err != nil {
+		return err
+	}
+
+	head, err := repo.Head()
+	if head == nil {
+
+		_, err = repo.CreateCommit("HEAD", sig, sig, message, tree)
+		return err
+
+	} else if err != nil {
+
+		return err
+
+	} else {
+
+		parent, err := repo.LookupCommit(head.Target())
+		if err != nil {
+			return err
+		}
+
+		_, err = repo.CreateCommit("HEAD", sig, sig, message, tree, parent)
+		return err
+
+	}
+
 }
 
 // Branches

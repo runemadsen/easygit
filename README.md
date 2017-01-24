@@ -12,6 +12,9 @@ func main() {
   // Add all files to index. Similar to 'git add .'
   err := easygit.AddAll("path/to/repo")
 
+  // Commit files in the index. If repo is commit, it will also create HEAD
+  err := easygit.Commit("path/to/repo", "My commit message", "Name", "Email")
+
   // List all local branches. Similar to 'git branch'
   branchNames := easygit.ListBranches("path/to/repo")
 
