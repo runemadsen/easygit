@@ -15,7 +15,8 @@ func TestAddAll(t *testing.T) {
 	repo := createTestRepo(t)
 	defer cleanupTestRepo(t, repo)
 
-	AddAll(repo.Workdir())
+	err := AddAll(repo.Workdir())
+	checkFatal(t, err)
 
 	index, err := repo.Index()
 	checkFatal(t, err)
