@@ -1,7 +1,6 @@
 package easygit
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"runtime"
@@ -20,6 +19,10 @@ func TestCommitAndSwitching(t *testing.T) {
 	// I add something into the dockerfile and use the commit function
 	err := ioutil.WriteFile(repo.Workdir()+"/Dockerfile", []byte("hello\n"), 0644)
 	checkFatal(t, err)
+
+	err = AddAll(repo.Workdir())
+	checkFatal(t, err)
+
 	err = Commit(repo.Workdir(), "first commit", "First Last", "first@last.com")
 	checkFatal(t, err)
 
@@ -32,16 +35,19 @@ func TestCommitAndSwitching(t *testing.T) {
 	// I modify the dockerfile and do another commit
 	err = ioutil.WriteFile(repo.Workdir()+"/Dockerfile", []byte("it is me\n"), 0644)
 	checkFatal(t, err)
+	err = AddAll(repo.Workdir())
+	checkFatal(t, err)
+	err = Commit(repo.Workdir(), "second commit", "First Last", "first@last.com")
+	checkFatal(t, err)
 
 	// I checkout the master branch again
 	err = CheckoutBranch(repo.Workdir(), "master")
 	checkFatal(t, err)
 
-	// the dockerfile is still the same as the one in the new branch
+	// The dockerfile is still the same as the one in the new branch
 	file, err := ioutil.ReadFile(repo.Workdir() + "/Dockerfile")
 	checkFatal(t, err)
-	if string(file) != "hello" {
-		fmt.Println(string(file))
+	if string(file) != "hello\n" {
 		fail(t)
 	}
 }

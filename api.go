@@ -129,7 +129,7 @@ func CheckoutBranch(repoPath string, branchName string) error {
 		return err
 	}
 
-	err = repo.CheckoutTree(tree, &git.CheckoutOpts{})
+	err = repo.CheckoutTree(tree, &git.CheckoutOpts{Strategy: git.CheckoutSafe})
 	if err != nil {
 		return err
 	}
