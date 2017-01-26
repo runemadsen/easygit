@@ -1,6 +1,7 @@
 package easygit
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"runtime"
@@ -9,6 +10,41 @@ import (
 
 	"github.com/libgit2/git2go"
 )
+
+func TestCommitAndSwitching(t *testing.T) {
+
+	// I create a new repo
+	repo := createTestRepo(t)
+	defer cleanupTestRepo(t, repo)
+
+	// I add something into the dockerfile and use the commit function
+	err := ioutil.WriteFile(repo.Workdir()+"/Dockerfile", []byte("hello\n"), 0644)
+	checkFatal(t, err)
+	err = Commit(repo.Workdir(), "first commit", "First Last", "first@last.com")
+	checkFatal(t, err)
+
+	// I create a new branch
+	err = CreateBranch(repo.Workdir(), "master", "slave")
+	checkFatal(t, err)
+	err = CheckoutBranch(repo.Workdir(), "slave")
+	checkFatal(t, err)
+
+	// I modify the dockerfile and do another commit
+	err = ioutil.WriteFile(repo.Workdir()+"/Dockerfile", []byte("it is me\n"), 0644)
+	checkFatal(t, err)
+
+	// I checkout the master branch again
+	err = CheckoutBranch(repo.Workdir(), "master")
+	checkFatal(t, err)
+
+	// the dockerfile is still the same as the one in the new branch
+	file, err := ioutil.ReadFile(repo.Workdir() + "/Dockerfile")
+	checkFatal(t, err)
+	if string(file) != "hello" {
+		fmt.Println(string(file))
+		fail(t)
+	}
+}
 
 func TestCommit(t *testing.T) {
 
