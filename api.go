@@ -203,7 +203,18 @@ func CurrentBranch(repoPath string) (string, error) {
 		return "", headErr
 	}
 
-	return strings.Split(head.Name(), "/")[2], nil
+	if head == nil {
+		return "", headErr
+	}
+
+	//find the branch name
+	branch := ""
+	branchElements := strings.Split(head.Name(), "/")
+	if len(branchElements) == 3 {
+		branch = branchElements[2]
+	}
+
+	return branch, nil
 }
 
 func DeleteBranch(repoPath string, branchName string) error {
