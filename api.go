@@ -154,9 +154,15 @@ func PushBranch(repoPath string, remoteName string, branch string, user string, 
 		return nil
 	}
 
+	called := false
+
 	err = remote.Push([]string{"refs/heads/" + branch}, &git.PushOptions{
 		RemoteCallbacks: git.RemoteCallbacks{
 			CredentialsCallback: func(url string, username_from_url string, allowed_types git.CredType) (git.ErrorCode, *git.Cred) {
+				if called {
+					return git.ErrUser, nil
+				}
+				called = true
 				_, creds := git.NewCredUserpassPlaintext(user, pass)
 				return git.ErrOk, &creds
 			},
