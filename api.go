@@ -146,12 +146,12 @@ func PushBranch(repoPath string, remoteName string, branch string, user string, 
 
 	repo, err := git.OpenRepository(repoPath)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	remote, err := repo.Remotes.Lookup(remoteName)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	called := false
@@ -163,8 +163,8 @@ func PushBranch(repoPath string, remoteName string, branch string, user string, 
 					return git.ErrUser, nil
 				}
 				called = true
-				_, creds := git.NewCredUserpassPlaintext(user, pass)
-				return git.ErrOk, &creds
+				ret, creds := git.NewCredUserpassPlaintext(user, pass)
+				return git.ErrorCode(ret), &creds
 			},
 		},
 	})

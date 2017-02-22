@@ -24,11 +24,12 @@ func main() {
   // Deletes a branch
   err := easygit.DeleteBranch("path/to/repo", "mybranch")
 
-  // Creates a branch from another branch. Similar to 'git checkout -b newbranch'
+  // Creates a branch from another branch.
   err := easygit.CreateBranch("path/to/repo", "master", "newbranch")
 
   // Pushes a branch to a HTTPS remote. Similar to 'git push origin master'
   err := easygit.PushBranch("path/to/repo", "origin", "master", "user", "password")
+  fmt.Println(err.(*git.GitError).Code) // if -7, it was wrong credentials
 
   // Checks out a branch. Similar to 'git checkout slave'
   err := easygit.CheckoutBranch("path/to/repo", "mybranch")
