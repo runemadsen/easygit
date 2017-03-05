@@ -10,6 +10,42 @@ import (
 	"github.com/libgit2/git2go"
 )
 
+// Make sure that a clone succeeds on a public repo even though the creds
+// are not set.
+func TestClone(t *testing.T) {
+	t.Parallel()
+
+	localPath, err := ioutil.TempDir("", "easygit")
+	checkFatal(t, err)
+
+	err = Clone("https://github.com/runemadsen/testrepo.git", localPath, "not", "used")
+	checkFatal(t, err)
+
+	localRepo, err := git.OpenRepository(localPath)
+	checkFatal(t, err)
+	defer cleanupTestRepo(t, localRepo)
+
+	file, err := ioutil.ReadFile(localRepo.Workdir() + "/README")
+	checkFatal(t, err)
+	if string(file) != "This is a README\n" {
+		fail(t)
+	}
+}
+
+// Make sure that the test fails with code -7 if I give wrong user/pass to
+// a private repo.
+func TestPrivateClone(t *testing.T) {
+	t.Parallel()
+
+	localPath, err := ioutil.TempDir("", "easygit")
+	checkFatal(t, err)
+
+	err = Clone("https://github.com/runemadsen/privatetestrepo.git", localPath, "WRONG", "CREDENTIALS")
+	if err.(*git.GitError).Code != -7 {
+		fail(t)
+	}
+}
+
 func TestCommitAndSwitching(t *testing.T) {
 
 	// I create a new repo

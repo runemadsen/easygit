@@ -9,6 +9,11 @@ import "github.com/runemadsen/easygit"
 
 func main() {
 
+  // Clones a repo to a local path. Credentials are not used if
+  // it's a public repo.
+  err := easygit.Clone("https://github.com/runemadsen/testrepo.git", "/my/repo/path", "user", "password")
+  fmt.Println(err.(*git.GitError).Code) // if -7, it was wrong credentials for private repo
+
   // Add all files to index. Similar to 'git add .'
   err := easygit.AddAll("path/to/repo")
 

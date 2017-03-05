@@ -7,6 +7,31 @@ import (
 	"github.com/libgit2/git2go"
 )
 
+// Init
+// --------------------------------------------------------
+
+func Clone(url string, repoPath string, user string, pass string) error {
+
+	called := false
+
+	_, err := git.Clone(url, repoPath, &git.CloneOptions{
+		FetchOptions: &git.FetchOptions{
+			RemoteCallbacks: git.RemoteCallbacks{
+				CredentialsCallback: func(url string, username_from_url string, allowed_types git.CredType) (git.ErrorCode, *git.Cred) {
+					if called {
+						return git.ErrUser, nil
+					}
+					called = true
+					ret, creds := git.NewCredUserpassPlaintext(user, pass)
+					return git.ErrorCode(ret), &creds
+				},
+			},
+		},
+	})
+
+	return err
+}
+
 // Add / Commit
 // --------------------------------------------------------
 
