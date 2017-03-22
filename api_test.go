@@ -270,6 +270,27 @@ func TestPushBranch(t *testing.T) {
 	checkFatal(t, err)
 }
 
+func TestPullBranch(t *testing.T) {
+	t.Parallel()
+
+	localRepo := createTestRepo(t)
+	seedTestRepo(t, localRepo)
+	defer cleanupTestRepo(t, localRepo)
+
+	remoteRepo := cloneToBareTestRepo(t, localRepo.Path())
+	defer cleanupTestRepo(t, remoteRepo)
+
+	// Change things in bare repo
+
+	_, err := localRepo.Remotes.Create("test_pull", remoteRepo.Path())
+	checkFatal(t, err)
+
+	PullBranch(localRepo.Workdir(), "test_pull", "master", "not", "used", "not", "used")
+
+	// Make sure the updates are in local
+	// make sure index is good
+}
+
 func TestCurrentBranch(t *testing.T) {
 
 	repo := createTestRepo(t)
@@ -303,6 +324,18 @@ func createBareTestRepo(t *testing.T) *git.Repository {
 	checkFatal(t, err)
 	repo, err := git.InitRepository(path, true)
 	checkFatal(t, err)
+	return repo
+}
+
+func cloneToBareTestRepo(t *testing.T, repoPath string) *git.Repository {
+	remotePath, err := ioutil.TempDir("", "git2go")
+	checkFatal(t, err)
+
+	repo, err := git.Clone(repoPath, remotePath, &git.CloneOptions{
+		Bare: true,
+	})
+	checkFatal(t, err)
+
 	return repo
 }
 

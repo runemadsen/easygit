@@ -197,6 +197,68 @@ func PushBranch(repoPath string, remoteName string, branch string, user string, 
 	return err
 }
 
+func PullBranch(repoPath string, remoteName string, branchName string, user string, pass string, name string, email string) error {
+
+	repo, err := git.OpenRepository(repoPath)
+	if err != nil {
+		return err
+	}
+
+	remote, err := repo.Remotes.Lookup(remoteName)
+	if err != nil {
+		return err
+	}
+
+	called := false
+
+	err = remote.Fetch([]string{}, &git.FetchOptions{
+		RemoteCallbacks: git.RemoteCallbacks{
+			CredentialsCallback: func(url string, username_from_url string, allowed_types git.CredType) (git.ErrorCode, *git.Cred) {
+				if called {
+					return git.ErrUser, nil
+				}
+				called = true
+				ret, creds := git.NewCredUserpassPlaintext(user, pass)
+				return git.ErrorCode(ret), &creds
+			},
+		},
+	}, "")
+
+	if err != nil {
+		return err
+	}
+
+	remoteRef, err := repo.References.Lookup("refs/remotes/origin/" + branchName)
+	if err != nil {
+		return err
+	}
+
+	mergeRemoteHead, err := repo.AnnotatedCommitFromRef(remoteRef)
+	if err != nil {
+		return err
+	}
+
+	mergeHeads := make([]*git.AnnotatedCommit, 1)
+	mergeHeads[0] = mergeRemoteHead
+	if err = repo.Merge(mergeHeads, nil, nil); err != nil {
+		return err
+	}
+
+	// Check if the index has conflicts after the merge
+	idx, err := repo.Index()
+	if err != nil {
+		return err
+	}
+
+	if idx.HasConflicts() {
+		// RESET CLEANUP
+		//return ERROR
+	}
+
+	// If everything looks fine, create a commit
+	return Commit(repoPath, "merged", name, email)
+}
+
 func CreateBranch(repoPath string, from string, to string) error {
 
 	repo, err := git.OpenRepository(repoPath)
