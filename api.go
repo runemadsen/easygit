@@ -1,6 +1,7 @@
 package easygit
 
 import (
+	"errors"
 	"strings"
 	"time"
 
@@ -228,12 +229,12 @@ func PullBranch(repoPath string, remoteName string, branchName string, user stri
 		return err
 	}
 
-	remoteRef, err := repo.References.Lookup("refs/remotes/" + remoteName + "/" + branchName)
+	remoteBranch, err := repo.References.Lookup("refs/remotes/" + remoteName + "/" + branchName)
 	if err != nil {
 		return err
 	}
 
-	mergeRemoteHead, err := repo.AnnotatedCommitFromRef(remoteRef)
+	mergeRemoteHead, err := repo.AnnotatedCommitFromRef(remoteBranch)
 	if err != nil {
 		return err
 	}
@@ -250,13 +251,52 @@ func PullBranch(repoPath string, remoteName string, branchName string, user stri
 		return err
 	}
 
-	if idx.HasConflicts() {
-		// RESET CLEANUP
-		//return ERROR
+	currentBranch, err := repo.Head()
+	if err != nil {
+		return err
 	}
 
-	// If everything looks fine, create a commit
-	return Commit(repoPath, "merged", name, email)
+	localCommit, err := repo.LookupCommit(currentBranch.Target())
+	if err != nil {
+		return err
+	}
+
+	// If index has conflicts, read old tree into index and
+	// return an error.
+	if idx.HasConflicts() {
+
+		repo.ResetToCommit(localCommit, git.ResetHard, &git.CheckoutOpts{})
+
+		repo.StateCleanup()
+
+		return errors.New("conflict")
+	}
+
+	// If everything looks fine, create a commit with the two parents
+	treeID, err := idx.WriteTree()
+	if err != nil {
+		return err
+	}
+
+	tree, err := repo.LookupTree(treeID)
+	if err != nil {
+		return err
+	}
+
+	remoteCommit, err := repo.LookupCommit(remoteBranch.Target())
+	if err != nil {
+		return err
+	}
+
+	sig := &git.Signature{Name: name, Email: email, When: time.Now()}
+	_, err = repo.CreateCommit("HEAD", sig, sig, "merged", tree, localCommit, remoteCommit)
+	if err != nil {
+		return err
+	}
+
+	repo.StateCleanup()
+
+	return nil
 }
 
 func CreateBranch(repoPath string, from string, to string) error {

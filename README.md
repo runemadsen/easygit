@@ -18,7 +18,7 @@ func main() {
   err := easygit.AddAll("path/to/repo")
 
   // Commit files in the index. If repo is commit, it will also create HEAD
-  err := easygit.Commit("path/to/repo", "My commit message", "Name", "Email")
+  err := easygit.Commit("path/to/repo", "My commit message", "Git Name", "Git Email")
 
   // List all local branches. Similar to 'git branch'
   branchNames := easygit.ListBranches("path/to/repo")
@@ -33,8 +33,15 @@ func main() {
   err := easygit.CreateBranch("path/to/repo", "master", "newbranch")
 
   // Pushes a branch to a HTTPS remote. Similar to 'git push origin master'
-  err := easygit.PushBranch("path/to/repo", "origin", "master", "user", "password")
+  err := easygit.PushBranch("path/to/repo", "origin", "master", "httpsuser", "httpspassword")
   fmt.Println(err.(*git.GitError).Code) // if -7, it was wrong credentials
+
+  // Pulls and merges a branch from a remote. This function is a bit opinionated: If the pull
+  // results in a conflict, it will reset back to the current state and return an error saying "conflict".
+  // This will not leave the repo in a conflict state, but leave the branch in the state that it was before the pull.
+  // If there is no conflict, it will create a merge commit and merge the local and remote branch
+  // (which is why it needs the last signature params)
+  err := PullBranch("path/to/repo", "origin", "master", "httpsuser", "httpspassword", "Git Name", "Git Email")
 
   // Checks out a branch. Similar to 'git checkout slave'
   err := easygit.CheckoutBranch("path/to/repo", "mybranch")

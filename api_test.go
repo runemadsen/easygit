@@ -116,7 +116,6 @@ func TestCommit(t *testing.T) {
 	if file == nil {
 		fail(t)
 	}
-
 }
 
 func TestCommitOtherBranch(t *testing.T) {
@@ -317,8 +316,55 @@ func TestPullBranch(t *testing.T) {
 	if string(dat) != "foo\n" {
 		fail(t)
 	}
+}
 
-	// make sure index is empty
+func TestPullBranchConflict(t *testing.T) {
+	t.Parallel()
+
+	localRepo := createTestRepo(t)
+	seedTestRepo(t, localRepo)
+	defer cleanupTestRepo(t, localRepo)
+
+	// clone to another repo, add a file, and clone to bare repo
+	tmpRepo := cloneToTestRepo(t, localRepo.Path(), false)
+	defer cleanupTestRepo(t, tmpRepo)
+	err := ioutil.WriteFile(tmpRepo.Workdir()+"/newfile.txt", []byte("foo\n"), 0644)
+	checkFatal(t, err)
+	AddAll(tmpRepo.Workdir())
+	Commit(tmpRepo.Workdir(), "Added file", "First Last", "first@last.com")
+	remoteRepo := cloneToTestRepo(t, tmpRepo.Path(), true)
+	defer cleanupTestRepo(t, remoteRepo)
+
+	// Also add file in local repo
+	err = ioutil.WriteFile(localRepo.Workdir()+"/newfile.txt", []byte("bar\n"), 0644)
+	checkFatal(t, err)
+	AddAll(localRepo.Workdir())
+	Commit(localRepo.Workdir(), "Also added file", "First Last", "first@last.com")
+
+	// Pull changes from remote
+	_, err = localRepo.Remotes.Create("test_pull", remoteRepo.Path())
+	checkFatal(t, err)
+	err = PullBranch(localRepo.Workdir(), "test_pull", "master", "not", "used", "not", "used")
+	if err.Error() != "conflict" {
+		fail(t)
+	}
+
+	// Make sure that there was no merge and that the
+	// old file is there
+	head, err := localRepo.Head()
+	checkFatal(t, err)
+	commit, err := localRepo.LookupCommit(head.Target())
+	checkFatal(t, err)
+
+	if commit.Message() == "merged" {
+		fail(t)
+	}
+
+	dat, err := ioutil.ReadFile(localRepo.Workdir() + "/newfile.txt")
+	checkFatal(t, err)
+	if string(dat) != "bar\n" {
+		fail(t)
+	}
 }
 
 func TestCurrentBranch(t *testing.T) {
