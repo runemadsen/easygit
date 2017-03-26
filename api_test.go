@@ -293,7 +293,7 @@ func TestPullBranch(t *testing.T) {
 	err = PullBranch(localRepo.Workdir(), "test_pull", "master", "not", "used", "not", "used")
 	checkFatal(t, err)
 
-	// Make sure the updates are HEAD
+	// Make sure the new file is in HEAD
 	head, err := localRepo.Head()
 	checkFatal(t, err)
 	commit, err := localRepo.LookupCommit(head.Target())
@@ -312,6 +312,11 @@ func TestPullBranch(t *testing.T) {
 	}
 
 	// Make sure updates are in workdir
+	dat, err := ioutil.ReadFile(localRepo.Workdir() + "/newfile.txt")
+	checkFatal(t, err)
+	if string(dat) != "foo\n" {
+		fail(t)
+	}
 
 	// make sure index is empty
 }
