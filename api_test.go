@@ -277,18 +277,43 @@ func TestPullBranch(t *testing.T) {
 	seedTestRepo(t, localRepo)
 	defer cleanupTestRepo(t, localRepo)
 
-	remoteRepo := cloneToBareTestRepo(t, localRepo.Path())
+	// clone to another repo, add a file, and clone to bare repo
+	tmpRepo := cloneToTestRepo(t, localRepo.Path(), false)
+	defer cleanupTestRepo(t, tmpRepo)
+	err := ioutil.WriteFile(tmpRepo.Workdir()+"/newfile.txt", []byte("foo\n"), 0644)
+	checkFatal(t, err)
+	AddAll(tmpRepo.Workdir())
+	Commit(tmpRepo.Workdir(), "Added file", "First Last", "first@last.com")
+	remoteRepo := cloneToTestRepo(t, tmpRepo.Path(), true)
 	defer cleanupTestRepo(t, remoteRepo)
 
-	// Change things in bare repo
-
-	_, err := localRepo.Remotes.Create("test_pull", remoteRepo.Path())
+	// Pull changes from remote
+	_, err = localRepo.Remotes.Create("test_pull", remoteRepo.Path())
+	checkFatal(t, err)
+	err = PullBranch(localRepo.Workdir(), "test_pull", "master", "not", "used", "not", "used")
 	checkFatal(t, err)
 
-	PullBranch(localRepo.Workdir(), "test_pull", "master", "not", "used", "not", "used")
+	// Make sure the updates are HEAD
+	head, err := localRepo.Head()
+	checkFatal(t, err)
+	commit, err := localRepo.LookupCommit(head.Target())
+	checkFatal(t, err)
 
-	// Make sure the updates are in local
-	// make sure index is good
+	if commit.Message() != "merged" {
+		fail(t)
+	}
+
+	tree, err := commit.Tree()
+	checkFatal(t, err)
+
+	file := tree.EntryByName("newfile.txt")
+	if file == nil {
+		fail(t)
+	}
+
+	// Make sure updates are in workdir
+
+	// make sure index is empty
 }
 
 func TestCurrentBranch(t *testing.T) {
@@ -327,12 +352,12 @@ func createBareTestRepo(t *testing.T) *git.Repository {
 	return repo
 }
 
-func cloneToBareTestRepo(t *testing.T, repoPath string) *git.Repository {
+func cloneToTestRepo(t *testing.T, repoPath string, bare bool) *git.Repository {
 	remotePath, err := ioutil.TempDir("", "git2go")
 	checkFatal(t, err)
 
 	repo, err := git.Clone(repoPath, remotePath, &git.CloneOptions{
-		Bare: true,
+		Bare: bare,
 	})
 	checkFatal(t, err)
 
@@ -382,7 +407,7 @@ func fail(t *testing.T) {
 	if !ok {
 		t.Fatalf("Unable to get caller")
 	}
-	t.Fatalf("Fail at %v:%v; %v", file, line)
+	t.Fatalf("Fail at %v:%v;", file, line)
 }
 
 func checkFatal(t *testing.T, err error) {

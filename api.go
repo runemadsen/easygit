@@ -228,7 +228,7 @@ func PullBranch(repoPath string, remoteName string, branchName string, user stri
 		return err
 	}
 
-	remoteRef, err := repo.References.Lookup("refs/remotes/origin/" + branchName)
+	remoteRef, err := repo.References.Lookup("refs/remotes/" + remoteName + "/" + branchName)
 	if err != nil {
 		return err
 	}
